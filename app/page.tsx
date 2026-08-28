@@ -97,7 +97,7 @@ export default async function HomePage() {
 
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
           Explore Research as an <br />
-          <span className="bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
             Interconnected Knowledge Graph
           </span>
         </h1>
@@ -123,7 +123,7 @@ export default async function HomePage() {
           label="Authors"
           value={data.stats ? data.stats.authorCount : "—"}
           icon={Users}
-          colorVariant="purple"
+          colorVariant="blue"
         />
         <StatCard
           label="Concepts"
@@ -150,13 +150,13 @@ export default async function HomePage() {
       {/* Feature Exploration Grid */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Author Bridge Pathfinder */}
-        <Card className="border-purple-200 bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:border-purple-900/50 dark:from-purple-950/30 dark:via-slate-900 dark:to-indigo-950/30">
+        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:border-blue-900/50 dark:from-blue-950/30 dark:via-slate-900 dark:to-indigo-950/30">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-600 text-white shadow-sm">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
                 <GitMerge className="h-4 w-4" />
               </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
                 Relational-Awkward Query
               </span>
             </div>
@@ -166,7 +166,7 @@ export default async function HomePage() {
             </h3>
 
             <p className="text-sm text-slate-600 dark:text-slate-300">
-              Discover how two researchers who have never co-authored are connected through shared ideas using Cypher <code className="font-mono text-xs text-purple-600 dark:text-purple-400 font-semibold">shortestPath()</code>.
+              Discover how two researchers who have never co-authored are connected through shared ideas using Cypher <code className="font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">shortestPath()</code>.
             </p>
 
             {data.samplePairs.length > 0 && (
@@ -179,10 +179,10 @@ export default async function HomePage() {
                     <Link
                       key={idx}
                       href={`/path_tracer?authorA=${pair.authorAId}&authorB=${pair.authorBId}`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-white px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:bg-purple-950/60 dark:text-purple-300 transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 transition-colors"
                     >
                       <span>{pair.authorAName}</span>
-                      <ArrowRight className="h-3 w-3 text-purple-400" />
+                      <ArrowRight className="h-3 w-3 text-blue-400" />
                       <span>{pair.authorBName}</span>
                     </Link>
                   ))}
@@ -193,7 +193,7 @@ export default async function HomePage() {
             <div className="pt-2">
               <Link
                 href="/path_tracer"
-                className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-purple-500 shadow-md shadow-purple-500/20 transition-all"
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-blue-500 shadow-md shadow-blue-500/20 transition-all"
               >
                 Open Path Tracer <ArrowRight className="h-4 w-4" />
               </Link>

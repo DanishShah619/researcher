@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       // Format for visualizer
       const nodes: GraphNode[] = nodesData.map((node) => {
         let color = "#3b82f6"; 
-        if (node.label === "Author") color = "#8b5cf6"; 
+        if (node.label === "Author") color = "#2563eb"; 
         if (node.label === "Paper") color = "#0ea5e9"; 
         if (node.label === "Concept") color = "#10b981"; 
         if (node.label === "Venue") color = "#f59e0b"; 

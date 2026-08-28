@@ -4,12 +4,12 @@ interface StatCardProps {
   label: string;
   value: string | number;
   icon: React.ComponentType<{ className?: string }>;
-  colorVariant?: "sky" | "purple" | "emerald" | "amber" | "indigo";
+  colorVariant?: "sky" | "blue" | "emerald" | "amber" | "indigo";
 }
 
 const colorMap = {
   sky: "bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400",
-  purple: "bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400",
+  blue: "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400",
   emerald: "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400",
   amber: "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400",
   indigo: "bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400",

@@ -127,7 +127,7 @@ export default async function ResearchTopicsPage({ searchParams }: PageProps) {
             id: topAuthor.id,
             label: "Author",
             name: topAuthor.name,
-            color: "#8b5cf6",
+            color: "#2563eb",
           });
         }
         graphEdges.push({
@@ -275,7 +275,7 @@ export default async function ResearchTopicsPage({ searchParams }: PageProps) {
 
                     {paper.authors && paper.authors.length > 0 && (
                       <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 truncate max-w-[70%]">
+                        <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 truncate max-w-[70%]">
                           <Users className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{paper.authors.map((a) => a.name).join(", ")}</span>
                         </div>

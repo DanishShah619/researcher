@@ -104,7 +104,7 @@ export default async function PaperDetailPage({ params }: PageProps) {
       id: a.id,
       label: "Author",
       name: a.name,
-      color: "#8b5cf6",
+      color: "#2563eb",
     });
     graphEdges.push({
       id: `e_auth_${a.id}_${paper.id}`,
@@ -210,14 +210,14 @@ export default async function PaperDetailPage({ params }: PageProps) {
 
         {/* Authors */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          <Users className="h-4 w-4 text-purple-500 shrink-0" />
+          <Users className="h-4 w-4 text-blue-500 shrink-0" />
           <span className="text-xs font-semibold text-slate-400">Authors:</span>
           {authors.length > 0 ? (
             authors.map((a, idx) => (
               <Link
                 key={a.id}
                 href={`/authors/${a.id}`}
-                className="text-xs font-semibold text-purple-600 hover:text-purple-500 dark:text-purple-400 dark:hover:text-purple-300 hover:underline"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
               >
                 {a.name}
                 {idx < authors.length - 1 ? "," : ""}

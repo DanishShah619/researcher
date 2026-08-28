@@ -1,3 +1,5 @@
+import { existsSync } from "fs";
+import { resolve } from "path";
 import { withSession, verifyConnectivity, closeDriver, toNative } from "../lib/db";
 import {
   CONSTRAINT_QUERIES,
@@ -10,6 +12,16 @@ import {
 } from "../lib/queries";
 import { searchPapers, S2Paper } from "./semanticScholar";
 import { SEED_TOPICS, CITATION_HOP_LIMIT_PER_PAPER } from "./data";
+
+// Load .env.local if running standalone outside Next.js
+try {
+  const envLocalPath = resolve(process.cwd(), ".env.local");
+  if (existsSync(envLocalPath) && typeof process.loadEnvFile === "function") {
+    process.loadEnvFile(envLocalPath);
+  }
+} catch {
+  // Ignored if already provided via shell environment
+}
 
 async function runSeed() {
   const startTime = Date.now();

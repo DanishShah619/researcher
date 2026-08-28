@@ -19,9 +19,9 @@ const variantStyles: Record<BadgeVariant, { bg: string; text: string; border: st
     icon: FileText,
   },
   author: {
-    bg: "bg-purple-50 dark:bg-purple-950/60",
-    text: "text-purple-700 dark:text-purple-300",
-    border: "border-purple-200 dark:border-purple-900/50",
+    bg: "bg-blue-50 dark:bg-blue-950/60",
+    text: "text-blue-700 dark:text-blue-300",
+    border: "border-blue-200 dark:border-blue-900/50",
     icon: User,
   },
   concept: {

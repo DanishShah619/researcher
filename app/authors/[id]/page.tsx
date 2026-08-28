@@ -91,7 +91,7 @@ export default async function AuthorDetailPage({ params }: PageProps) {
       id: author.id,
       label: "Author",
       name: author.name,
-      color: "#7c3aed",
+      color: "#2563eb",
     },
   ];
 
@@ -137,7 +137,7 @@ export default async function AuthorDetailPage({ params }: PageProps) {
       id: co.id,
       label: "Author",
       name: co.name,
-      color: "#c084fc",
+      color: "#60a5fa",
     });
   });
 
@@ -154,11 +154,11 @@ export default async function AuthorDetailPage({ params }: PageProps) {
       <Card className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400 shadow-sm">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400 shadow-sm">
               <User className="h-7 w-7" />
             </div>
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
                 Researcher Profile
               </span>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
@@ -169,7 +169,7 @@ export default async function AuthorDetailPage({ params }: PageProps) {
 
           <Link
             href={`/path_tracer?authorA=${author.id}`}
-            className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-purple-500 shadow-md shadow-purple-500/20 transition-all self-start sm:self-auto"
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-blue-500 shadow-md shadow-blue-500/20 transition-all self-start sm:self-auto"
           >
             <GitMerge className="h-4 w-4" /> Trace Concept Bridge
           </Link>
@@ -212,7 +212,7 @@ export default async function AuthorDetailPage({ params }: PageProps) {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Network className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <Network className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">Knowledge & Collaboration Network</h2>
           </div>
           <span className="text-xs text-slate-400">
@@ -280,13 +280,13 @@ export default async function AuthorDetailPage({ params }: PageProps) {
                 <div key={co.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-2">
                   <Link
                     href={`/authors/${co.id}`}
-                    className="text-xs font-semibold text-slate-800 hover:text-purple-600 dark:text-slate-200 dark:hover:text-purple-400"
+                    className="text-xs font-semibold text-slate-800 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400"
                   >
                     {co.name}
                   </Link>
                   <Link
                     href={`/path_tracer?authorA=${author.id}&authorB=${co.id}`}
-                    className="shrink-0 text-[10px] font-semibold text-purple-600 hover:underline dark:text-purple-400"
+                    className="shrink-0 text-[10px] font-semibold text-blue-600 hover:underline dark:text-blue-400"
                   >
                     Check Path
                   </Link>

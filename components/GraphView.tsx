@@ -76,7 +76,7 @@ export default function GraphView({
     ["CITES", "AUTHORED", "ABOUT", "PUBLISHED_IN", "DEFAULT"].forEach(
       (type) => {
         let color = "#94a3b8";
-        if (type === "AUTHORED") color = "#a855f7";
+        if (type === "AUTHORED") color = "#2563eb";
         if (type === "ABOUT") color = "#10b981";
         if (type === "CITES") color = "#0ea5e9";
         if (type === "PUBLISHED_IN") color = "#f59e0b";
@@ -139,7 +139,7 @@ export default function GraphView({
       .enter()
       .append("line")
       .attr("stroke", (d) => {
-        if (d.type === "AUTHORED") return "#c084fc";
+        if (d.type === "AUTHORED") return "#60a5fa";
         if (d.type === "ABOUT") return "#34d399";
         if (d.type === "CITES") return "#38bdf8";
         return "#94a3b8";
@@ -318,7 +318,7 @@ export default function GraphView({
           <span className="text-slate-600 dark:text-slate-300">Paper</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-purple-500" />
+          <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
           <span className="text-slate-600 dark:text-slate-300">Author</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -384,7 +384,7 @@ export default function GraphView({
             {selectedNode.label === "Author" && (
               <Link
                 href={`/authors/${selectedNode.id}`}
-                className="flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-500 transition-colors"
+                className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500 transition-colors"
               >
                 View Author <ExternalLink className="h-3.5 w-3.5" />
               </Link>
