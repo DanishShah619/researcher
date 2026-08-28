@@ -13,7 +13,7 @@ export const SEED_TOPICS: SeedTopicConfig[] = [
   { query: "Graph Neural Networks", limit: 20 },
   { query: "Knowledge Graph Reasoning", limit: 15 },
   { query: "Large Language Model Reasoning", limit: 20 },
-  { query: "Vector Database Embeddings", limit: 15 }
+  { query: "Vector Database Embeddings", limit: 15 },
 ];
 
 /**

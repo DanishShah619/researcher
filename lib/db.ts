@@ -1,18 +1,15 @@
-import neo4j, { Driver, Session, SessionMode, Integer, isInt } from "neo4j-driver";
+import neo4j, {
+  Driver,
+  Session,
+  SessionMode,
+  Integer,
+  isInt,
+} from "neo4j-driver";
 
-/**
- * Global declaration for development hot-reloading.
- * Prevents multiple driver instances from being spawned during Next.js HMR,
- * strictly honoring CognoDB's 200 connection pool limit.
- */
 declare global {
-  // eslint-disable-next-line no-var
   var __cognodbDriver: Driver | undefined;
 }
 
-/**
- * Validates and retrieves required CognoDB environment credentials.
- */
 function getDbCredentials() {
   const uri = process.env.COGNODB_URI;
   const user = process.env.COGNODB_USER;
@@ -26,18 +23,14 @@ function getDbCredentials() {
 
     throw new Error(
       `[CognoDB Error] Missing required database environment variables: ${missing.join(
-        ", "
-      )}. Please verify your .env.local configuration.`
+        ", ",
+      )}. Please verify your .env.local configuration.`,
     );
   }
 
   return { uri, user, password };
 }
 
-/**
- * Returns the singleton neo4j Driver instance configured for CognoDB.
- * Configures connection pool ceiling to 20 to protect against connection exhaustion.
- */
 export function getDriver(): Driver {
   if (globalThis.__cognodbDriver) {
     return globalThis.__cognodbDriver;
@@ -53,9 +46,10 @@ export function getDriver(): Driver {
     userAgent: "ResearchCompanion/1.0",
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    globalThis.__cognodbDriver = driver;
-  }
+  // Cache globally regardless of environment. Without this, production deploys
+  // on serverless platforms (Vercel) spin up a new connection pool per request,
+  // exhausting CognoDB's connection ceiling almost immediately.
+  globalThis.__cognodbDriver = driver;
 
   return driver;
 }
@@ -96,7 +90,7 @@ export async function verifyConnectivity(): Promise<{
  */
 export async function withSession<T>(
   work: (session: Session) => Promise<T>,
-  mode: SessionMode = "READ"
+  mode: SessionMode = "READ",
 ): Promise<T> {
   const driver = getDriver();
   const session = driver.session({ defaultAccessMode: mode });

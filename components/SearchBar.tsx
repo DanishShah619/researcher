@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Search, FileText, User, Loader2, X } from "lucide-react";
-import Link from "next/link";
+
 import { useRouter } from "next/navigation";
 
 interface SearchResultItem {
@@ -33,7 +33,7 @@ export default function SearchBar({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Debounced search fetch
+  // use effecth with debounce to fetch search results
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);

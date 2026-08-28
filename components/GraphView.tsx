@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import * as d3 from "d3";
 import { GraphNode, GraphEdge } from "@/lib/queries";
-import { ZoomIn, ZoomOut, RotateCcw, Info, ExternalLink } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCcw, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 interface SimulationNode extends d3.SimulationNodeDatum, GraphNode {
@@ -69,9 +69,8 @@ export default function GraphView({
     const svgHeight = typeof height === "number" ? height : 520;
 
     const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove(); // Clear previous render
+    svg.selectAll("*").remove();
 
-    // Create defs for arrowheads and markers
     const defs = svg.append("defs");
 
     ["CITES", "AUTHORED", "ABOUT", "PUBLISHED_IN", "DEFAULT"].forEach(
@@ -205,24 +204,22 @@ export default function GraphView({
         "transition-transform duration-150 filter drop-shadow-sm hover:scale-110",
       );
 
-    // Node Icon / Badge Indicator
+    // Node type abbreviation — SVG text rendering is unreliable for emoji cross-browser
     node
       .append("text")
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "central")
-      .attr(
-        "class",
-        "fill-white text-[10px] font-bold pointer-events-none select-none",
-      )
+      .attr("class", "fill-white text-[10px] font-bold pointer-events-none select-none")
+      .attr("font-size", "11px")
+      .attr("font-weight", "700")
       .text((d) => {
-        if (d.label === "Paper") return "📄";
-        if (d.label === "Author") return "👤";
-        if (d.label === "Concept") return "💡";
-        if (d.label === "Venue") return "🏛️";
-        return "•";
+        if (d.label === "Paper") return "P";
+        if (d.label === "Author") return "A";
+        if (d.label === "Concept") return "C";
+        if (d.label === "Venue") return "V";
+        return "·";
       });
 
-    // Node Name Label
     node
       .append("text")
       .attr("dx", 0)
@@ -314,7 +311,7 @@ export default function GraphView({
         </button>
       </div>
 
-      {/* Graph Legend */}
+      {/* Legend */}
       <div className="absolute bottom-3 left-3 z-10 flex flex-wrap gap-2.5 rounded-lg bg-white/90 px-3 py-2 text-xs font-medium shadow-sm ring-1 ring-slate-200 dark:bg-slate-900/90 dark:ring-slate-800">
         <div className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-sky-500" />
@@ -334,7 +331,6 @@ export default function GraphView({
         </div>
       </div>
 
-      {/* Hover Info Tooltip */}
       {hoveredNode && (
         <div className="pointer-events-none absolute top-3 left-3 z-20 max-w-sm rounded-lg bg-slate-900/95 p-3 text-xs text-white shadow-xl backdrop-blur-sm border border-slate-700">
           <div className="flex items-center gap-2">
@@ -357,7 +353,6 @@ export default function GraphView({
         </div>
       )}
 
-      {/* Selected Node Drawer / Info Card */}
       {selectedNode && (
         <div className="absolute bottom-3 right-3 z-20 max-w-xs rounded-xl bg-white p-4 shadow-xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800 animate-in fade-in slide-in-from-bottom-2">
           <div className="flex items-start justify-between gap-2">

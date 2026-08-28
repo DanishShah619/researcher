@@ -1,17 +1,8 @@
 /**
- * Centralized Cypher Query Catalog & Type Definitions
- * 
- * Rules enforced:
- * 1. All Cypher queries live here (no inline Cypher in API routes or components).
- * 2. All queries are parameterised.
- * 3. Variable-length path bounds (e.g. *1..N) are strictly validated/clamped server-side
- *    before literal interpolation to satisfy Cypher grammar constraints (§7 in AGENTS.md).
- * 4. Writes strictly utilize MERGE for complete idempotency (§6 in AGENTS.md).
+ * Centralized Cypher query catalog and data contracts.
+ *
+    * This file defines the Cypher queries used to interact with the Neo4j graph database,
  */
-
-// ==========================================
-// 1. Types & Data Models
-// ==========================================
 
 export interface PaperData {
   id: string;
@@ -84,20 +75,13 @@ export interface GraphStats {
   citationCount: number;
 }
 
-// ==========================================
-// 2. Schema Constraints & Setup
-// ==========================================
-
+// Uniqueness constraints double as fast indexes for MERGE operations
 export const CONSTRAINT_QUERIES = [
   `CREATE CONSTRAINT paper_id_unique IF NOT EXISTS FOR (p:Paper) REQUIRE p.id IS UNIQUE`,
   `CREATE CONSTRAINT author_id_unique IF NOT EXISTS FOR (a:Author) REQUIRE a.id IS UNIQUE`,
   `CREATE CONSTRAINT concept_name_unique IF NOT EXISTS FOR (c:Concept) REQUIRE c.name IS UNIQUE`,
-  `CREATE CONSTRAINT venue_name_unique IF NOT EXISTS FOR (v:Venue) REQUIRE v.name IS UNIQUE`
+  `CREATE CONSTRAINT venue_name_unique IF NOT EXISTS FOR (v:Venue) REQUIRE v.name IS UNIQUE`,
 ];
-
-// ==========================================
-// 3. Idempotent Ingestion / Upsert Queries (MERGE)
-// ==========================================
 
 export const UPSERT_PAPER = `
   MERGE (p:Paper {id: $id})
@@ -141,44 +125,9 @@ export const UPSERT_CITATION = `
   RETURN source.id AS source, target.id AS target
 `;
 
-// Batch ingestion query for high efficiency
-export const BATCH_UPSERT_PAPERS = `
-  UNWIND $papers AS paperData
-  MERGE (p:Paper {id: paperData.id})
-  SET p.title = paperData.title,
-      p.year = paperData.year,
-      p.abstract = paperData.abstract,
-      p.url = paperData.url,
-      p.citationCount = paperData.citationCount
-
-  WITH p, paperData
-  FOREACH (author IN paperData.authors |
-    MERGE (a:Author {id: author.id})
-    ON CREATE SET a.name = author.name
-    MERGE (a)-[:AUTHORED]->(p)
-  )
-
-  FOREACH (concept IN paperData.concepts |
-    MERGE (c:Concept {name: concept})
-    MERGE (p)-[:ABOUT]->(c)
-  )
-
-  FOREACH (venueName IN CASE WHEN paperData.venue IS NOT NULL THEN [paperData.venue] ELSE [] END |
-    MERGE (v:Venue {name: venueName})
-    MERGE (p)-[:PUBLISHED_IN]->(v)
-  )
-`;
-
-// ==========================================
-// 4. Required Core Assignment Queries
-// ==========================================
-
 /**
- * Multi-hop Traversal Query Generator (Assignment Requirement 1)
- *
- * Traverses variable-length citation chains up to maxHops, filtering by concept.
- * Note: Cypher syntax requires literal integer bounds for *1..N. The integer
- * is safely validated and clamped between 1 and 6 to prevent injection.
+ * Variable-length traversal query builder.
+ * Clamps hops between 1 and 6 to prevent runaway query execution.
  */
 export function buildCitationChainQuery(maxHops: number = 3): string {
   const safeHops = Math.min(Math.max(Math.floor(maxHops), 1), 6);
@@ -199,12 +148,8 @@ export function buildCitationChainQuery(maxHops: number = 3): string {
 }
 
 /**
- * Relational-Awkward Query (Assignment Requirement 2)
- *
- * Computes the shortest concept-bridging path between two authors who have NEVER co-authored.
- * In a relational SQL database, this requires recursive CTEs or multi-way self-joins
- * with unknown traversal depth (Author -> Paper -> Concept -> Paper -> Author).
- * In Cypher, it is an expressive shortestPath pattern over heterogeneous relationships.
+ * Shortest concept-bridging path between two non-coauthoring researchers.
+ * Relational equivalent requires recursive CTEs or multi-way self-joins across 5 join tables.
  */
 export const BRIDGE_PATH_BETWEEN_AUTHORS = `
   MATCH (a:Author {id: $authorA}), (b:Author {id: $authorB})
@@ -225,10 +170,6 @@ export const BRIDGE_PATH_BETWEEN_AUTHORS = `
            target: coalesce(endNode(rel).id, endNode(rel).name)
          }] AS relsData
 `;
-
-// ==========================================
-// 5. Application Detail & Neighborhood Queries
-// ==========================================
 
 export const GET_PAPER_WITH_NEIGHBORHOOD = `
   MATCH (p:Paper {id: $paperId})

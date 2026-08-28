@@ -1,4 +1,3 @@
-
 export interface S2Author {
   authorId: string;
   name: string;
@@ -43,10 +42,12 @@ const S2_FIELDS =
 // Sleep helper
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/**
- * runs a HTTP fetch with automatic exponential backoff on HTTP 429  .
- */
-async function fetchWithRetry(url: string, retries = 4, delayMs = 1200): Promise<Response> {
+// HTTP fetch with exponential backoff on rate limits (HTTP 429)
+async function fetchWithRetry(
+  url: string,
+  retries = 4,
+  delayMs = 1200,
+): Promise<Response> {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const res = await fetch(url, {
@@ -57,8 +58,12 @@ async function fetchWithRetry(url: string, retries = 4, delayMs = 1200): Promise
 
       if (res.status === 429) {
         const retryAfter = res.headers.get("retry-after");
-        const waitTime = retryAfter ? parseInt(retryAfter, 10) * 1000 : delayMs * Math.pow(2, attempt);
-        console.warn(`[S2 Rate Limit] 429 received. Backing off for ${waitTime}ms (attempt ${attempt}/${retries})...`);
+        const waitTime = retryAfter
+          ? parseInt(retryAfter, 10) * 1000
+          : delayMs * Math.pow(2, attempt);
+        console.warn(
+          `[S2 Rate Limit] 429 received. Backing off for ${waitTime}ms (attempt ${attempt}/${retries})...`,
+        );
         await sleep(waitTime);
         continue;
       }
@@ -70,7 +75,9 @@ async function fetchWithRetry(url: string, retries = 4, delayMs = 1200): Promise
       return res;
     } catch (err) {
       if (attempt === retries) throw err;
-      console.warn(`[S2 Fetch Error] Attempt ${attempt} failed: ${err}. Retrying in ${delayMs}ms...`);
+      console.warn(
+        `[S2 Fetch Error] Attempt ${attempt} failed: ${err}. Retrying in ${delayMs}ms...`,
+      );
       await sleep(delayMs);
     }
   }
@@ -81,12 +88,17 @@ async function fetchWithRetry(url: string, retries = 4, delayMs = 1200): Promise
 /**
  * Searches for research papers by querying keyword or domain.
  */
-export async function searchPapers(query: string, limit = 25): Promise<S2Paper[]> {
+export async function searchPapers(
+  query: string,
+  limit = 25,
+): Promise<S2Paper[]> {
   const url = `${BASE_URL}/paper/search?query=${encodeURIComponent(
-    query
+    query,
   )}&limit=${limit}&fields=${S2_FIELDS}`;
 
-  console.log(`[S2 Client] Searching papers for topic: "${query}" (limit: ${limit})...`);
+  console.log(
+    `[S2 Client] Searching papers for topic: "${query}" (limit: ${limit})...`,
+  );
   const response = await fetchWithRetry(url);
   const data = (await response.json()) as S2SearchResponse;
 
@@ -96,13 +108,18 @@ export async function searchPapers(query: string, limit = 25): Promise<S2Paper[]
 /**
  * Fetches single paper with its references for multi-hop expansion.
  */
-export async function getPaperDetails(paperId: string): Promise<S2Paper | null> {
+export async function getPaperDetails(
+  paperId: string,
+): Promise<S2Paper | null> {
   const url = `${BASE_URL}/paper/${encodeURIComponent(paperId)}?fields=${S2_FIELDS}`;
   try {
     const response = await fetchWithRetry(url);
     return (await response.json()) as S2Paper;
   } catch (error) {
-    console.error(`[S2 Client] Failed to fetch details for paper ${paperId}:`, error);
+    console.error(
+      `[S2 Client] Failed to fetch details for paper ${paperId}:`,
+      error,
+    );
     return null;
   }
 }

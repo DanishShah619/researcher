@@ -12,94 +12,78 @@ import { searchPapers, S2Paper } from "./semanticScholar";
 import { SEED_TOPICS, CITATION_HOP_LIMIT_PER_PAPER } from "./data";
 
 async function runSeed() {
-  
-  console.log("  Research Companion — CognoDB Seed Pipeline");
- 
+  const startTime = Date.now();
+  console.log("[seed] Starting CognoDB ingestion pipeline...");
 
-  // 1. Verify Connectivity
-  console.log("\n[Step 1/4] Verifying CognoDB connectivity...");
+  // 1. Connection check
   const conn = await verifyConnectivity();
   if (!conn.ok) {
-    console.error(`\n Failed to connect to CognoDB: ${conn.message}`);
-    console.error("\nPlease check your .env.local file or environment variables:");
-    console.error("  - COGNODB_URI (e.g. bolt+s://<instance>.databases.cognodb.cloud)");
-    console.error("  - COGNODB_USER (e.g. cognodb)");
-    console.error("  - COGNODB_PASSWORD");
+    console.error(`[seed] Connection failed: ${conn.message}`);
+    console.error("[seed] Ensure COGNODB_URI, COGNODB_USER, and COGNODB_PASSWORD are set in .env.local");
     process.exit(1);
   }
-  console.log(`Connected successfully to CognoDB (${conn.address || "remote"}).`);
+  console.log(`[seed] Connected to CognoDB (${conn.address || "remote"})`);
 
-  // 2. Ensure Constraints & Indexes
-  console.log("\n[Step 2/4] Ensuring schema uniqueness constraints...");
+  // 2. Schema constraints
+  console.log("[seed] Verifying uniqueness constraints and indexes...");
   await withSession(async (session) => {
     for (const query of CONSTRAINT_QUERIES) {
       try {
         await session.run(query);
       } catch (err: unknown) {
-       
         const msg = err instanceof Error ? err.message : String(err);
-        if (!msg.includes("already exists") && !msg.includes("An equivalent constraint already exists")) {
-          console.warn(`  Notice during constraint creation: ${msg}`);
+        if (!msg.includes("already exists") && !msg.includes("equivalent constraint")) {
+          console.warn(`[seed] Schema notice: ${msg}`);
         }
       }
     }
   }, "WRITE");
-  console.log("Schema constraints verified.");
 
-  // 3. Fetch And Ingest Live Papers from Semantic Scholar API
-  console.log("\n[Step 3/4] Ingesting papers & building citation graph...");
-  let totalPapersSeeded = 0;
-  let totalCitationsSeeded = 0;
+  // 3. Ingestion loop
+  let totalPapers = 0;
+  let totalCitations = 0;
 
   for (const topic of SEED_TOPICS) {
-    console.log(`\n Fetching topic: "${topic.query}" (target: ${topic.limit} papers)`);
+    console.log(`[seed] Fetching topic: "${topic.query}" (limit: ${topic.limit})...`);
     let papers: S2Paper[] = [];
     try {
       papers = await searchPapers(topic.query, topic.limit);
     } catch (err) {
-      console.error(` Could not fetch topic "${topic.query}":`, err);
+      console.error(`[seed] Topic fetch error for "${topic.query}":`, err);
       continue;
     }
 
-    console.log(`  Received ${papers.length} papers. Writing to CognoDB...`);
+    console.log(`[seed] Writing ${papers.length} papers for "${topic.query}"...`);
 
+    // Open one session per paper and run all writes inside it —
+    // authors, concepts, venue, and citation hops all share the same connection.
     for (const paper of papers) {
       if (!paper.paperId || !paper.title) continue;
 
       await withSession(async (session) => {
-        // 3.1 Upsert Paper
         await session.run(UPSERT_PAPER, {
           id: paper.paperId,
           title: paper.title,
-          year: paper.year || null,
-          abstract: paper.abstract || null,
-          url: paper.url || `https://www.semanticscholar.org/paper/${paper.paperId}`,
-          citationCount: paper.citationCount || 0,
+          year: paper.year ?? null,
+          abstract: paper.abstract ?? null,
+          url: paper.url ?? `https://www.semanticscholar.org/paper/${paper.paperId}`,
+          citationCount: paper.citationCount ?? 0,
         });
-        totalPapersSeeded++;
+        totalPapers++;
 
-        // 3.2 Upsert Authors & AUTHORED edges
-        if (paper.authors && paper.authors.length > 0) {
-          for (const author of paper.authors) {
-            if (author.authorId && author.name) {
-              await session.run(UPSERT_AUTHOR_AND_AUTHORED, {
-                paperId: paper.paperId,
-                authorId: author.authorId,
-                name: author.name,
-              });
-            }
+        for (const author of paper.authors ?? []) {
+          if (author.authorId && author.name) {
+            await session.run(UPSERT_AUTHOR_AND_AUTHORED, {
+              paperId: paper.paperId,
+              authorId: author.authorId,
+              name: author.name,
+            });
           }
         }
 
-        // 3.3 Upsert Concepts & ABOUT edges
         const concepts = new Set<string>();
-        if (paper.fieldsOfStudy) {
-          paper.fieldsOfStudy.forEach((f) => f && concepts.add(f.trim()));
-        }
-        if (paper.s2FieldsOfStudy) {
-          paper.s2FieldsOfStudy.forEach((s) => s.category && concepts.add(s.category.trim()));
-        }
-        // Add current search query as an extra concept tag
+        (paper.fieldsOfStudy ?? []).forEach((f) => f && concepts.add(f.trim()));
+        (paper.s2FieldsOfStudy ?? []).forEach((s) => s.category && concepts.add(s.category.trim()));
         concepts.add(topic.query);
 
         for (const conceptName of concepts) {
@@ -109,37 +93,32 @@ async function runSeed() {
           });
         }
 
-        // 3.4 Upsert Venue & PUBLISHED_IN edge
-        if (paper.venue && typeof paper.venue === "string" && paper.venue.trim().length > 0) {
+        if (paper.venue && paper.venue.trim().length > 0) {
           await session.run(UPSERT_VENUE_AND_PUBLISHED_IN, {
             paperId: paper.paperId,
             name: paper.venue.trim(),
           });
         }
 
-        // 3.5 Expand citation references (1-hop expansion)
-        if (paper.references && paper.references.length > 0) {
-          const refsToExpand = paper.references
-            .filter((r) => r.paperId && r.title)
-            .slice(0, CITATION_HOP_LIMIT_PER_PAPER);
+        const refs = (paper.references ?? [])
+          .filter((r) => r.paperId && r.title)
+          .slice(0, CITATION_HOP_LIMIT_PER_PAPER);
 
-          for (const ref of refsToExpand) {
-            if (!ref.paperId || !ref.title) continue;
-            await session.run(UPSERT_CITATION, {
-              sourcePaperId: paper.paperId,
-              targetPaperId: ref.paperId,
-              targetTitle: ref.title,
-              targetYear: ref.year || null,
-            });
-            totalCitationsSeeded++;
-          }
+        for (const ref of refs) {
+          if (!ref.paperId || !ref.title) continue;
+          await session.run(UPSERT_CITATION, {
+            sourcePaperId: paper.paperId,
+            targetPaperId: ref.paperId,
+            targetTitle: ref.title,
+            targetYear: ref.year ?? null,
+          });
+          totalCitations++;
         }
       }, "WRITE");
     }
   }
 
-  // Summary of ingestion
-  console.log("\n[Step 4/4] Verifying graph database counts...");
+  // 4. Summarize
   const stats = await withSession(async (session) => {
     const result = await session.run(GET_GRAPH_STATS);
     if (result.records.length > 0) {
@@ -154,22 +133,18 @@ async function runSeed() {
     return null;
   }, "READ");
 
-
-  console.log("  🎉 Ingestion Complete!");
- 
+  const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
+  console.log(`[seed] Ingestion complete in ${durationSec}s.`);
   if (stats) {
-    console.log(`  Papers in DB:     ${stats.paperCount}`);
-    console.log(`  Authors in DB:    ${stats.authorCount}`);
-    console.log(`  Concepts in DB:   ${stats.conceptCount}`);
-    console.log(`  Venues in DB:     ${stats.venueCount}`);
-    console.log(`  Citations in DB:  ${stats.citationCount}`);
+    console.log(
+      `[seed] Database totals: ${stats.paperCount} papers, ${stats.authorCount} authors, ${stats.conceptCount} concepts, ${stats.venueCount} venues, ${stats.citationCount} citations.`
+    );
   }
 }
 
-
 runSeed()
   .catch((err) => {
-    console.error("\n❌ Fatal error during seed execution:", err);
+    console.error("[seed] Unhandled error during seed execution:", err);
     process.exit(1);
   })
   .finally(async () => {

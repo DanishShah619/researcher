@@ -6,18 +6,15 @@ import {
   Lightbulb,
   ArrowLeft,
   GitMerge,
-  ArrowRight,
-  AlertCircle,
   Network,
 } from "lucide-react";
 import { withSession, toNative } from "@/lib/db";
-import {
-  GET_AUTHOR_PROFILE,
-  AuthorProfile,
-  GraphNode,
-  GraphEdge,
-} from "@/lib/queries";
+import { GET_AUTHOR_PROFILE, AuthorProfile, GraphNode, GraphEdge } from "@/lib/queries";
 import GraphView from "@/components/GraphView";
+import Badge from "@/components/ui/Badge";
+import { Card, CardHeader } from "@/components/ui/Card";
+import EmptyState from "@/components/ui/EmptyState";
+import ErrorState from "@/components/ui/ErrorState";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -57,72 +54,49 @@ export default async function AuthorDetailPage({ params }: PageProps) {
   try {
     data = await getAuthorData(authorId);
   } catch (err: unknown) {
-    errorMsg =
-      err instanceof Error ? err.message : "Database connection failed";
+    errorMsg = err instanceof Error ? err.message : "Database connection failed";
   }
 
-  
   if (errorMsg) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-16 text-center space-y-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400">
-          <AlertCircle className="h-7 w-7" />
-        </div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Unable to Query CognoDB
-        </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
-          {errorMsg}
-        </p>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
-        >
-          <ArrowLeft className="h-4 w-4" /> Return Home
-        </Link>
+      <div className="mx-auto max-w-4xl px-4 py-16">
+        <ErrorState
+          title="Unable to Load Researcher"
+          message={errorMsg}
+          retryHref={`/authors/${authorId}`}
+        />
       </div>
     );
   }
 
-  
   if (!data) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-16 text-center space-y-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400">
-          <User className="h-7 w-7" />
-        </div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Author Not Found
-        </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
-          No author with ID <code className="font-mono">{authorId}</code> was
-          found in the graph database.
-        </p>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
-        >
-          <ArrowLeft className="h-4 w-4" /> Return Home
-        </Link>
+      <div className="mx-auto max-w-4xl px-4 py-16">
+        <EmptyState
+          title="Author Not Found"
+          description={`No author with ID "${authorId}" was found in the graph database.`}
+          actionText="Back to Search"
+          actionHref="/"
+          icon={User}
+        />
       </div>
     );
   }
 
   const { author, papers, concepts, coAuthors } = data;
 
-  // Build Graph nodes
+  // Build Graph Nodes for Author's network
   const graphNodes: GraphNode[] = [
     {
       id: author.id,
       label: "Author",
       name: author.name,
-      color: "#7c3aed", // Main author node
+      color: "#7c3aed",
     },
   ];
 
   const graphEdges: GraphEdge[] = [];
 
-  
   papers.slice(0, 10).forEach((p) => {
     graphNodes.push({
       id: p.id,
@@ -140,7 +114,6 @@ export default async function AuthorDetailPage({ params }: PageProps) {
     });
   });
 
-  // Add top concepts
   concepts.slice(0, 5).forEach((c) => {
     graphNodes.push({
       id: `concept_${c.name}`,
@@ -148,7 +121,6 @@ export default async function AuthorDetailPage({ params }: PageProps) {
       name: c.name,
       color: "#10b981",
     });
-    // Link to author's papers that match this concept
     papers.slice(0, 6).forEach((p) => {
       graphEdges.push({
         id: `e_about_${p.id}_${c.name}`,
@@ -160,7 +132,6 @@ export default async function AuthorDetailPage({ params }: PageProps) {
     });
   });
 
-  // Add co-authors
   coAuthors.slice(0, 6).forEach((co) => {
     graphNodes.push({
       id: co.id,
@@ -172,7 +143,6 @@ export default async function AuthorDetailPage({ params }: PageProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-      {/* Back button */}
       <Link
         href="/"
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
@@ -180,8 +150,8 @@ export default async function AuthorDetailPage({ params }: PageProps) {
         <ArrowLeft className="h-4 w-4" /> Back to Search & Explore
       </Link>
 
-      {/* Author Header */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-900 shadow-sm space-y-6">
+      {/* Author Profile Header */}
+      <Card className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400 shadow-sm">
@@ -197,74 +167,53 @@ export default async function AuthorDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Quick Bridge Pathfinder Action */}
           <Link
             href={`/path_tracer?authorA=${author.id}`}
             className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-purple-500 shadow-md shadow-purple-500/20 transition-all self-start sm:self-auto"
           >
-            <GitMerge className="h-4 w-4" /> Find Concept Bridge to Another
-            Author
+            <GitMerge className="h-4 w-4" /> Trace Concept Bridge
           </Link>
         </div>
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
           <div>
-            <p className="text-xs text-slate-400 font-medium">
-              Authored Papers in DB
-            </p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white">
-              {papers.length}
-            </p>
+            <p className="text-xs text-slate-400 font-medium">Authored Papers</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-white">{papers.length}</p>
           </div>
           <div>
-            <p className="text-xs text-slate-400 font-medium">
-              Direct Co-Authors
-            </p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white">
-              {coAuthors.length}
-            </p>
+            <p className="text-xs text-slate-400 font-medium">Direct Co-Authors</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-white">{coAuthors.length}</p>
           </div>
           <div>
-            <p className="text-xs text-slate-400 font-medium">
-              Research Concepts
-            </p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white">
-              {concepts.length}
-            </p>
+            <p className="text-xs text-slate-400 font-medium">Research Concepts</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-white">{concepts.length}</p>
           </div>
         </div>
 
-        {/* Top Research Concepts */}
+        {/* Research Concepts */}
         {concepts.length > 0 && (
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Lightbulb className="h-3.5 w-3.5 text-emerald-500" /> Primary
-              Research Themes
+              <Lightbulb className="h-3.5 w-3.5 text-emerald-500" /> Primary Research Themes
             </h3>
             <div className="flex flex-wrap gap-2">
               {concepts.map((c) => (
-                <Link
-                  key={c.name}
-                  href={`/researchtopics?topic=${encodeURIComponent(c.name)}`}
-                  className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 transition-colors"
-                >
-                   {c.name}
+                <Link key={c.name} href={`/researchtopics?topic=${encodeURIComponent(c.name)}`}>
+                  <Badge variant="concept" label={c.name} />
                 </Link>
               ))}
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
-      {/* Author Knowledge & Collaboration Network */}
+      {/* Collaboration Graph View */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Network className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              Author Knowledge & Collaboration Network
-            </h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Knowledge & Collaboration Network</h2>
           </div>
           <span className="text-xs text-slate-400">
             {graphNodes.length} nodes • {graphEdges.length} connections
@@ -274,26 +223,20 @@ export default async function AuthorDetailPage({ params }: PageProps) {
         <GraphView nodes={graphNodes} edges={graphEdges} height={460} />
       </section>
 
-      {/* Authored Papers & Co-Authors */}
+      {/* Publications & Co-Authors */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Publications List (2 Cols) */}
-        <div className="md:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <FileText className="h-4 w-4 text-sky-500" /> Authored Publications
-            ({papers.length})
-          </h3>
+        <Card className="md:col-span-2 space-y-4">
+          <CardHeader
+            title={`Authored Publications (${papers.length})`}
+            icon={FileText}
+          />
 
           {papers.length === 0 ? (
-            <p className="text-xs text-slate-400 py-6 text-center">
-              No publications found.
-            </p>
+            <p className="text-xs text-slate-400 py-6 text-center">No publications found.</p>
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {papers.map((p) => (
-                <div
-                  key={p.id}
-                  className="py-4 first:pt-0 last:pb-0 space-y-1.5"
-                >
+                <div key={p.id} className="py-4 first:pt-0 last:pb-0 space-y-1.5">
                   <div className="flex items-start justify-between gap-2">
                     <Link
                       href={`/papers/${p.id}`}
@@ -308,9 +251,9 @@ export default async function AuthorDetailPage({ params }: PageProps) {
                     )}
                   </div>
                   {p.venue && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                       {p.venue}
-                    </p>
+                    <div className="pt-0.5">
+                      <Badge variant="venue" label={p.venue} />
+                    </div>
                   )}
                   {p.abstract && (
                     <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
@@ -321,46 +264,37 @@ export default async function AuthorDetailPage({ params }: PageProps) {
               ))}
             </div>
           )}
-        </div>
+        </Card>
 
-        {/* Co-Authors List (1 Col) */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Users className="h-4 w-4 text-purple-500" /> Direct Co-Authors (
-            {coAuthors.length})
-          </h3>
+        <Card className="space-y-4">
+          <CardHeader
+            title={`Direct Co-Authors (${coAuthors.length})`}
+            icon={Users}
+          />
 
           {coAuthors.length === 0 ? (
-            <p className="text-xs text-slate-400 py-6 text-center">
-              No co-authors recorded in database.
-            </p>
+            <p className="text-xs text-slate-400 py-6 text-center">No co-authors recorded in database.</p>
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {coAuthors.map((co) => (
-                <div
-                  key={co.id}
-                  className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-2"
-                >
-                  <div>
-                    <Link
-                      href={`/authors/${co.id}`}
-                      className="text-xs font-semibold text-slate-800 hover:text-purple-600 dark:text-slate-200 dark:hover:text-purple-400"
-                    >
-                      {co.name}
-                    </Link>
-                  </div>
+                <div key={co.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-2">
+                  <Link
+                    href={`/authors/${co.id}`}
+                    className="text-xs font-semibold text-slate-800 hover:text-purple-600 dark:text-slate-200 dark:hover:text-purple-400"
+                  >
+                    {co.name}
+                  </Link>
                   <Link
                     href={`/path_tracer?authorA=${author.id}&authorB=${co.id}`}
                     className="shrink-0 text-[10px] font-semibold text-purple-600 hover:underline dark:text-purple-400"
-                    title="Check Path"
                   >
-                    Bridge Check
+                    Check Path
                   </Link>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </Card>
       </section>
     </div>
   );

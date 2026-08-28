@@ -102,36 +102,28 @@ export async function GET(request: NextRequest) {
         label: rel.type.toLowerCase().replace("_", " "),
       }));
 
-      // Generate step-by-step human-readable explanation
-      const explanation: string[] = [];
-      for (let i = 0; i < nodesData.length - 1; i++) {
-        const current = nodesData[i];
-        const next = nodesData[i + 1];
-        const rel = relsData[i];
+      
+        const explanation: string[] = [];
+        for (let i = 0; i < nodesData.length - 1; i++) {
+          const current = nodesData[i];
+          const next = nodesData[i + 1];
+          const rel = relsData[i];
 
-        const currentName = current.name || current.title || current.id;
-        const nextName = next.name || next.title || next.id;
+          const currentName = current.name || current.title || current.id;
+          const nextName = next.name || next.title || next.id;
 
-        if (current.label === "Author" && next.label === "Paper") {
-          explanation.push(` ${currentName} authored paper "${nextName}"`);
-        } else if (current.label === "Paper" && next.label === "Concept") {
-          explanation.push(
-            ` "${currentName}" explores concept  "${nextName}"`,
-          );
-        } else if (current.label === "Concept" && next.label === "Paper") {
-          explanation.push(
-            ` Concept "${currentName}" connects to paper  "${nextName}"`,
-          );
-        } else if (current.label === "Paper" && next.label === "Author") {
-          explanation.push(
-            ` "${currentName}" was authored by ${nextName}`,
-          );
-        } else {
-          explanation.push(
-            `${currentName} -[:${rel?.type || "CONNECTED"}]-> ${nextName}`,
-          );
+          if (current.label === "Author" && next.label === "Paper") {
+            explanation.push(`${currentName} authored "${nextName}"`);
+          } else if (current.label === "Paper" && next.label === "Concept") {
+            explanation.push(`"${currentName}" is tagged with concept "${nextName}"`);
+          } else if (current.label === "Concept" && next.label === "Paper") {
+            explanation.push(`Concept "${currentName}" also appears in "${nextName}"`);
+          } else if (current.label === "Paper" && next.label === "Author") {
+            explanation.push(`"${currentName}" was co-authored by ${nextName}`);
+          } else {
+            explanation.push(`${currentName} — [${rel?.type || "CONNECTED"}] → ${nextName}`);
+          }
         }
-      }
 
       return {
         pathLength,
