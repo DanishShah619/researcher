@@ -6,8 +6,8 @@ A graph-native literature discovery web application for exploring academic citat
 
 ## Demo & Links
 
-- **Live Hosted Application**: [Live Demo](https://researcherbuddy-wxyr.onrender.com/)
-- **Video Walkthrough**: [Screen Recording](https://loom.com/share/your-video-id) 
+- **Live Hosted Application**: [Live Demo](https://researcherbuddy-m3gh.onrender.com/)
+- **Video Walkthrough**: [Screen Recording](https://www.loom.com/share/c528969dfcc54fff867c4829bca84ef6) 
 
 ---
 
