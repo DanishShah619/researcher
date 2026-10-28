@@ -5,6 +5,7 @@ import neo4j, {
   Integer,
   isInt,
 } from "neo4j-driver";
+import { parseBoundedInt } from "./params";
 
 declare global {
   var __cognodbDriver: Driver | undefined;
@@ -81,24 +82,34 @@ export async function verifyConnectivity(): Promise<{
   }
 }
 
+// Sessions slower than this are logged with their label. Override with COGNODB_SLOW_QUERY_MS.
+const SLOW_SESSION_MS = parseBoundedInt(process.env.COGNODB_SLOW_QUERY_MS ?? null, 500, 0, 600_000);
+
 /**
  * Executes database operations within a managed session lifecycle.
  * Guarantees that the session is closed even if the callback throws.
  *
  * @param work Async callback receiving the active Neo4j Session
  * @param mode 'READ' | 'WRITE' session mode (defaults to 'READ')
+ * @param label Name used in the slow-session log line
  */
 export async function withSession<T>(
   work: (session: Session) => Promise<T>,
   mode: SessionMode = "READ",
+  label: string = "session",
 ): Promise<T> {
   const driver = getDriver();
   const session = driver.session({ defaultAccessMode: mode });
+  const startedAt = performance.now();
 
   try {
     return await work(session);
   } finally {
     await session.close();
+    const elapsedMs = Math.round(performance.now() - startedAt);
+    if (elapsedMs >= SLOW_SESSION_MS) {
+      console.warn(`[CognoDB] slow ${mode} session "${label}": ${elapsedMs}ms`);
+    }
   }
 }
 

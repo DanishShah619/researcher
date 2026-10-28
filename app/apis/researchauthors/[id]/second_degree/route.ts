@@ -16,15 +16,19 @@ export async function GET(
 
   try {
     const network = await withSession(async (session) => {
+      // First-degree co-authors are deduplicated before expanding, so each is
+      // traversed once rather than once per shared paper.
       const result = await session.run(
         `
-        MATCH (a:Author {id: $authorId})-[:AUTHORED]->(p1:Paper)<-[:AUTHORED]-(co1:Author)
+        MATCH (a:Author {id: $authorId})-[:AUTHORED]->(:Paper)<-[:AUTHORED]-(co1:Author)
         WHERE co1 <> a
-        OPTIONAL MATCH (co1)-[:AUTHORED]->(p2:Paper)<-[:AUTHORED]-(co2:Author)
+        WITH a, collect(DISTINCT co1) AS firstDegree
+        UNWIND firstDegree AS co1
+        OPTIONAL MATCH (co1)-[:AUTHORED]->(:Paper)<-[:AUTHORED]-(co2:Author)
         WHERE co2 <> a AND co2 <> co1
         RETURN a.id AS rootId,
                a.name AS rootName,
-               collect(DISTINCT co1 {.id, .name}) AS firstDegreeCoAuthors,
+               [c IN firstDegree | c {.id, .name}] AS firstDegreeCoAuthors,
                collect(DISTINCT co2 {.id, .name}) AS secondDegreeCoAuthors
         `,
         { authorId },
@@ -38,7 +42,7 @@ export async function GET(
         firstDegreeCoAuthors: rec.get("firstDegreeCoAuthors"),
         secondDegreeCoAuthors: rec.get("secondDegreeCoAuthors"),
       });
-    }, "READ");
+    }, "READ", "api:author-second-degree");
 
     if (!network) {
       return NextResponse.json({ error: "Author not found" }, { status: 404 });

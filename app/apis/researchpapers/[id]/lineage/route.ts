@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { parseBoundedInt, MAX_LIMIT } from "@/lib/params";
 import { buildCitationChainQuery } from "@/lib/queries";
 
 export async function GET(
@@ -8,12 +9,9 @@ export async function GET(
 ) {
   const { id: paperId } = await context.params;
   const searchParams = request.nextUrl.searchParams;
-  const hops = Math.min(
-    Math.max(parseInt(searchParams.get("hops") || "3", 10), 1),
-    5,
-  );
+  const hops = parseBoundedInt(searchParams.get("hops"), 3, 1, 5);
   const concept = searchParams.get("concept") || null;
-  const limit = parseInt(searchParams.get("limit") || "20", 10);
+  const limit = parseBoundedInt(searchParams.get("limit"), 20, 1, MAX_LIMIT);
 
   if (!paperId) {
     return NextResponse.json(
@@ -40,7 +38,7 @@ export async function GET(
           pathPaperIds: r.get("pathPaperIds"),
         }),
       );
-    }, "READ");
+    }, "READ", "api:paper-lineage");
 
     return NextResponse.json({
       startPaperId: paperId,

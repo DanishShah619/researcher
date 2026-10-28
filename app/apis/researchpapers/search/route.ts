@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { parseBoundedInt, MAX_LIMIT } from "@/lib/params";
 import { SEARCH_PAPERS_AND_AUTHORS } from "@/lib/queries";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get("q") || "";
-  const limit = parseInt(searchParams.get("limit") || "15", 10);
+  const limit = parseBoundedInt(searchParams.get("limit"), 15, 1, MAX_LIMIT);
 
   if (!query.trim()) {
     return NextResponse.json({ query: "", results: [] });
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
           count: r.get("count"),
         }),
       );
-    }, "READ");
+    }, "READ", "api:search");
 
     return NextResponse.json({
       query,

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { parseBoundedInt, MAX_LIMIT } from "@/lib/params";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const limit = parseInt(searchParams.get("limit") || "30", 10);
+  const limit = parseBoundedInt(searchParams.get("limit"), 30, 1, MAX_LIMIT);
 
   try {
     const authors = await withSession(async (session) => {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
           paperCount: r.get("paperCount"),
         }),
       );
-    }, "READ");
+    }, "READ", "api:authors-list");
 
     return NextResponse.json({ authors });
   } catch (error: unknown) {

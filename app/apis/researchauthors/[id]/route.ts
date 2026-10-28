@@ -32,7 +32,7 @@ export async function GET(
         concepts: record.get("concepts") || [],
         coAuthors: (record.get("coAuthors") || []).filter(Boolean),
       });
-    }, "READ");
+    }, "READ", "api:author-profile");
 
     if (!data) {
       return NextResponse.json(

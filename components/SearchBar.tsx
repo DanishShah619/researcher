@@ -37,10 +37,13 @@ export default function SearchBar({
   useEffect(() => {
     if (!query.trim()) return;
 
+    // Aborted when the query changes, so a slow stale response can't overwrite newer results
+    const controller = new AbortController();
     const handler = setTimeout(async () => {
       try {
         const res = await fetch(
           `/apis/researchpapers/search?q=${encodeURIComponent(query)}&limit=8`,
+          { signal: controller.signal },
         );
         if (res.ok) {
           const data = await res.json();
@@ -48,13 +51,17 @@ export default function SearchBar({
           setIsOpen(true);
         }
       } catch (err) {
+        if (controller.signal.aborted) return;
         console.error("Search failed:", err);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }, 280);
 
-    return () => clearTimeout(handler);
+    return () => {
+      clearTimeout(handler);
+      controller.abort();
+    };
   }, [query]);
 
   // Click outside to close dropdown

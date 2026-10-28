@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { parseBoundedInt, MAX_LIMIT } from "@/lib/params";
 import { GET_RESEARCH_TOPICS, GET_PAPERS_BY_TOPIC } from "@/lib/queries";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const topic = searchParams.get("topic");
-  const limit = parseInt(searchParams.get("limit") || "30", 10);
+  const limit = parseBoundedInt(searchParams.get("limit"), 30, 1, MAX_LIMIT);
 
   try {
     const data = await withSession(async (session) => {
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
 
         return { topics };
       }
-    }, "READ");
+    }, "READ", "api:research-topics");
 
     return NextResponse.json(data);
   } catch (error: unknown) {

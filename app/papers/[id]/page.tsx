@@ -40,7 +40,7 @@ async function getPaperData(paperId: string) {
         references: rec.get("references") || [],
         citedBy: rec.get("citedBy") || [],
       });
-    }, "READ");
+    }, "READ", "page:paper");
   } catch (err) {
     console.error(`Failed to load paper ${paperId}:`, err);
     throw err;

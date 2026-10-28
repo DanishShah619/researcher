@@ -16,7 +16,7 @@ export async function GET() {
         venueCount: 0,
         citationCount: 0,
       };
-    }, "READ");
+    }, "READ", "api:graph-stats");
 
     return NextResponse.json({ ok: true, stats });
   } catch (error: unknown) {

@@ -34,9 +34,16 @@ function PathTracerContent() {
   const searchParams = useSearchParams();
   const initialAuthorA = searchParams.get("authorA");
   const initialAuthorB = searchParams.get("authorB");
+  // Deep links built by pathTracerHref carry names; only bare-id links need a lookup.
+  const initialNameA = searchParams.get("nameA");
+  const initialNameB = searchParams.get("nameB");
 
-  const [authorA, setAuthorA] = useState<AuthorSelection | null>(null);
-  const [authorB, setAuthorB] = useState<AuthorSelection | null>(null);
+  const [authorA, setAuthorA] = useState<AuthorSelection | null>(
+    initialAuthorA && initialNameA ? { id: initialAuthorA, name: initialNameA } : null,
+  );
+  const [authorB, setAuthorB] = useState<AuthorSelection | null>(
+    initialAuthorB && initialNameB ? { id: initialAuthorB, name: initialNameB } : null,
+  );
   const [samples, setSamples] = useState<
     Array<{ authorAId: string; authorAName: string; authorBId: string; authorBName: string }>
   >([]);
@@ -60,23 +67,23 @@ function PathTracerContent() {
   }, []);
 
   useEffect(() => {
-    if (initialAuthorA) {
-      fetch(`/apis/researchauthors/${initialAuthorA}`)
+    if (initialAuthorA && !initialNameA) {
+      fetch(`/apis/researchauthors/${encodeURIComponent(initialAuthorA)}`)
         .then((r) => r.json())
         .then((d) => {
           if (d.author) setAuthorA({ id: d.author.id, name: d.author.name });
         })
         .catch(() => setAuthorA({ id: initialAuthorA, name: `Author ${initialAuthorA}` }));
     }
-    if (initialAuthorB) {
-      fetch(`/apis/researchauthors/${initialAuthorB}`)
+    if (initialAuthorB && !initialNameB) {
+      fetch(`/apis/researchauthors/${encodeURIComponent(initialAuthorB)}`)
         .then((r) => r.json())
         .then((d) => {
           if (d.author) setAuthorB({ id: d.author.id, name: d.author.name });
         })
         .catch(() => setAuthorB({ id: initialAuthorB, name: `Author ${initialAuthorB}` }));
     }
-  }, [initialAuthorA, initialAuthorB]);
+  }, [initialAuthorA, initialAuthorB, initialNameA, initialNameB]);
 
   const handleTrace = async (aId?: string, bId?: string) => {
     const targetA = aId || authorA?.id;

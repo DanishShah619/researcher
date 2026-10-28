@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { parseBoundedInt, MAX_LIMIT } from "@/lib/params";
 import { buildCitationChainQuery } from "@/lib/queries";
 
 export async function GET(
@@ -8,9 +9,9 @@ export async function GET(
 ) {
   const { id: paperId } = await context.params;
   const searchParams = request.nextUrl.searchParams;
-  const hops = parseInt(searchParams.get("hops") || "2", 10);
+  const hops = parseBoundedInt(searchParams.get("hops"), 2, 1, 6);
   const conceptFilter = searchParams.get("concept") || null;
-  const limit = parseInt(searchParams.get("limit") || "25", 10);
+  const limit = parseBoundedInt(searchParams.get("limit"), 25, 1, MAX_LIMIT);
 
   if (!paperId) {
     return NextResponse.json(
@@ -37,7 +38,7 @@ export async function GET(
           pathPaperIds: rec.get("pathPaperIds"),
         }),
       );
-    }, "READ");
+    }, "READ", "api:paper-citations");
 
     return NextResponse.json({
       startPaperId: paperId,

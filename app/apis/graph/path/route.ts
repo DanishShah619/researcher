@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
             authorBName: r.get("authorBName"),
           }),
         );
-      }, "READ");
+      }, "READ", "api:path-samples");
 
       return NextResponse.json({ samples });
     }
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
         edges,
         explanation,
       };
-    }, "READ");
+    }, "READ", "api:path-bridge");
 
     if (!pathData) {
       return NextResponse.json(

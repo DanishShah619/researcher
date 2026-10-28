@@ -16,7 +16,12 @@ import StatCard from "@/components/ui/StatCard";
 import Badge from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { withSession, toNative } from "@/lib/db";
+import { pathTracerHref } from "@/lib/links";
 import { GET_GRAPH_STATS, GET_RESEARCH_TOPICS, GET_SAMPLE_AUTHORS_FOR_PATH } from "@/lib/queries";
+
+// Regenerate in the background at most every 5 minutes instead of freezing the
+// build-time snapshot (which also froze the "unreachable" banner if the build had no DB).
+export const revalidate = 300;
 
 async function getDashboardData() {
   try {
@@ -54,7 +59,7 @@ async function getDashboardData() {
         topics,
         samplePairs,
       };
-    }, "READ");
+    }, "READ", "page:home");
   } catch (err: unknown) {
     return {
       isDbConnected: false,
@@ -178,7 +183,10 @@ export default async function HomePage() {
                   {data.samplePairs.slice(0, 2).map((pair, idx) => (
                     <Link
                       key={idx}
-                      href={`/path_tracer?authorA=${pair.authorAId}&authorB=${pair.authorBId}`}
+                      href={pathTracerHref(
+                        { id: pair.authorAId, name: pair.authorAName },
+                        { id: pair.authorBId, name: pair.authorBName },
+                      )}
                       className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 transition-colors"
                     >
                       <span>{pair.authorAName}</span>

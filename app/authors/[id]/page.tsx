@@ -9,6 +9,7 @@ import {
   Network,
 } from "lucide-react";
 import { withSession, toNative } from "@/lib/db";
+import { pathTracerHref } from "@/lib/links";
 import { GET_AUTHOR_PROFILE, AuthorProfile, GraphNode, GraphEdge } from "@/lib/queries";
 import GraphView from "@/components/GraphView";
 import Badge from "@/components/ui/Badge";
@@ -38,7 +39,7 @@ async function getAuthorData(authorId: string) {
         concepts: rec.get("concepts") || [],
         coAuthors: (rec.get("coAuthors") || []).filter(Boolean),
       });
-    }, "READ");
+    }, "READ", "page:author");
   } catch (err) {
     console.error(`Failed to load author ${authorId}:`, err);
     throw err;
@@ -168,7 +169,7 @@ export default async function AuthorDetailPage({ params }: PageProps) {
           </div>
 
           <Link
-            href={`/path_tracer?authorA=${author.id}`}
+            href={pathTracerHref(author)}
             className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-blue-500 shadow-md shadow-blue-500/20 transition-all self-start sm:self-auto"
           >
             <GitMerge className="h-4 w-4" /> Trace Concept Bridge
@@ -285,7 +286,7 @@ export default async function AuthorDetailPage({ params }: PageProps) {
                     {co.name}
                   </Link>
                   <Link
-                    href={`/path_tracer?authorA=${author.id}&authorB=${co.id}`}
+                    href={pathTracerHref(author, co)}
                     className="shrink-0 text-[10px] font-semibold text-blue-600 hover:underline dark:text-blue-400"
                   >
                     Check Path

@@ -54,7 +54,7 @@ async function getTopicsData(selectedTopic?: string) {
         topics,
         topicPapers,
       };
-    }, "READ");
+    }, "READ", "page:research-topics");
   } catch (err) {
     console.error("Failed to load topics:", err);
     throw err;

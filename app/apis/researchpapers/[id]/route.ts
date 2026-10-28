@@ -34,7 +34,7 @@ export async function GET(
         references: record.get("references") || [],
         citedBy: record.get("citedBy") || [],
       });
-    }, "READ");
+    }, "READ", "api:paper-detail");
 
     if (!data) {
       return NextResponse.json(
