@@ -89,7 +89,7 @@ Uniqueness constraints on `Paper.id`, `Author.id`, `Concept.name`, and `Venue.na
 ### 2. Clone & Install Dependencies
 ```bash
 git clone https://github.com/DanishShah619/researcher.git
-cd wexa_ai
+cd researcher
 npm install
 ```
 
@@ -211,6 +211,7 @@ RETURN path,
 │   ├── path_tracer/page.tsx             # Interactive concept bridge pathfinder
 │   ├── researchtopics/page.tsx          # Conceptual domain browser
 │   ├── layout.tsx                       # Root layout & navigation
+│   ├── loading.tsx                      # Route loading skeleton (also per detail/topics route)
 │   └── page.tsx                         # Dashboard & exploration overview
 ├── components/
 │   ├── ui/                              # Reusable component primitives (Badge, Card, StatCard, etc.)
@@ -219,8 +220,9 @@ RETURN path,
 ├── lib/
 │   ├── db.ts                            # Driver singleton, session manager, & type converter
 │   └── queries.ts                       # Centralized parameterised openCypher queries
-└── seed/
-    ├── data.ts                          # Topic configuration & hop limits
-    ├── semanticScholar.ts               # Rate-limited Semantic Scholar API client
-    └── seed.ts                          # Idempotent graph ingestion pipeline
+├── seed/
+│   ├── data.ts                          # Topic configuration & hop limits
+│   ├── semanticScholar.ts               # Rate-limited Semantic Scholar API client
+│   └── seed.ts                          # Idempotent graph ingestion pipeline
+└── .env.local.example                   # CognoDB connection template (copy to .env.local)
 ```

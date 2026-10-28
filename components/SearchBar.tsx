@@ -33,15 +33,10 @@ export default function SearchBar({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // use effecth with debounce to fetch search results
+  // Loading/results reset happens in handleQueryChange; the effect only runs the debounced fetch
   useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      setIsLoading(false);
-      return;
-    }
+    if (!query.trim()) return;
 
-    setIsLoading(true);
     const handler = setTimeout(async () => {
       try {
         const res = await fetch(
@@ -76,6 +71,16 @@ export default function SearchBar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    if (!value.trim()) {
+      setResults([]);
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
+  };
+
   const handleItemClick = (item: SearchResultItem) => {
     if (onSelect) {
       onSelect(item);
@@ -98,7 +103,7 @@ export default function SearchBar({
           type="text"
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
+            handleQueryChange(e.target.value);
             if (!isOpen) setIsOpen(true);
           }}
           onFocus={() => {
@@ -112,8 +117,7 @@ export default function SearchBar({
         ) : query ? (
           <button
             onClick={() => {
-              setQuery("");
-              setResults([]);
+              handleQueryChange("");
               setIsOpen(false);
             }}
             className="absolute right-3.5 rounded p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"

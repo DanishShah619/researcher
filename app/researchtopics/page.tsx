@@ -4,7 +4,6 @@ import {
   FileText,
   Users,
   ArrowRight,
-  Sparkles,
   GitFork,
   Network,
 } from "lucide-react";
@@ -18,9 +17,9 @@ import {
   GraphEdge,
 } from "@/lib/queries";
 import GraphView from "@/components/GraphView";
-import Badge from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import ErrorState from "@/components/ui/ErrorState";
+import EmptyState from "@/components/ui/EmptyState";
 
 interface PageProps {
   searchParams: Promise<{ topic?: string }>;
@@ -91,6 +90,18 @@ export default async function ResearchTopicsPage({ searchParams }: PageProps) {
 
   const topics = data?.topics || [];
   const topicPapers = data?.topicPapers || [];
+
+  if (topics.length === 0) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-16">
+        <EmptyState
+          title="No Research Topics Yet"
+          description="The graph has no Concept nodes linked to papers. Run `npm run seed` to ingest papers from Semantic Scholar, then refresh this page."
+          icon={Lightbulb}
+        />
+      </div>
+    );
+  }
 
   // Build Graph Nodes for Selected Topic
   const graphNodes: GraphNode[] = [];

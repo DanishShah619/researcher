@@ -15,7 +15,6 @@ import SearchBar from "@/components/SearchBar";
 import GraphView from "@/components/GraphView";
 import { GraphNode, GraphEdge } from "@/lib/queries";
 import { Card } from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
 
 interface AuthorSelection {
   id: string;

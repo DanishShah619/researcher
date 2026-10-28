@@ -146,7 +146,9 @@ async function runSeed() {
   }, "READ");
 
   const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log(`[seed] Ingestion complete in ${durationSec}s.`);
+  console.log(
+    `[seed] Ingestion complete in ${durationSec}s (${totalPapers} papers and ${totalCitations} citation edges written this run).`
+  );
   if (stats) {
     console.log(
       `[seed] Database totals: ${stats.paperCount} papers, ${stats.authorCount} authors, ${stats.conceptCount} concepts, ${stats.venueCount} venues, ${stats.citationCount} citations.`
