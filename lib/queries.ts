@@ -171,12 +171,23 @@ export const BRIDGE_PATH_BETWEEN_AUTHORS = `
          }] AS relsData
 `;
 
+// Each neighborhood branch is aggregated back to one row before the next OPTIONAL MATCH,
+// so intermediate rows grow with the sum of branch sizes rather than their product.
 export const GET_PAPER_WITH_NEIGHBORHOOD = `
   MATCH (p:Paper {id: $paperId})
-  OPTIONAL MATCH (a:Author)-[:AUTHORED]->(p)
-  OPTIONAL MATCH (p)-[:ABOUT]->(c:Concept)
+
   OPTIONAL MATCH (p)-[:PUBLISHED_IN]->(v:Venue)
+  WITH p, head(collect(v.name)) AS venue
+
+  OPTIONAL MATCH (a:Author)-[:AUTHORED]->(p)
+  WITH p, venue, collect(DISTINCT a {.id, .name}) AS authors
+
+  OPTIONAL MATCH (p)-[:ABOUT]->(c:Concept)
+  WITH p, venue, authors, collect(DISTINCT c.name) AS concepts
+
   OPTIONAL MATCH (p)-[:CITES]->(ref:Paper)
+  WITH p, venue, authors, concepts, collect(DISTINCT ref {.id, .title, .year}) AS references
+
   OPTIONAL MATCH (citedBy:Paper)-[:CITES]->(p)
   RETURN p {
            .id,
@@ -186,21 +197,21 @@ export const GET_PAPER_WITH_NEIGHBORHOOD = `
            .url,
            .citationCount
          } AS paper,
-         collect(DISTINCT a {.id, .name}) AS authors,
-         collect(DISTINCT c.name) AS concepts,
-         v.name AS venue,
-         collect(DISTINCT ref {.id, .title, .year}) AS references,
+         authors,
+         concepts,
+         venue,
+         references,
          collect(DISTINCT citedBy {.id, .title, .year}) AS citedBy
 `;
 
+// Same staged shape as above. Every WITH keeps exactly one row per author, so the query
+// always returns a single record. Concept counts are the author's papers tagged with that
+// concept; sharedPapersCount is the number of papers co-authored with that author.
 export const GET_AUTHOR_PROFILE = `
   MATCH (a:Author {id: $authorId})
+
   OPTIONAL MATCH (a)-[:AUTHORED]->(p:Paper)
   OPTIONAL MATCH (p)-[:PUBLISHED_IN]->(v:Venue)
-  OPTIONAL MATCH (p)-[:ABOUT]->(c:Concept)
-  OPTIONAL MATCH (co:Author)-[:AUTHORED]->(p)
-  WHERE co <> a
-
   WITH a,
        collect(DISTINCT p {
          .id,
@@ -210,21 +221,24 @@ export const GET_AUTHOR_PROFILE = `
          .url,
          .citationCount,
          venue: v.name
-       }) AS papers,
-       c.name AS conceptName,
-       count(DISTINCT p) AS conceptWeight,
-       co
+       }) AS papers
 
+  OPTIONAL MATCH (a)-[:AUTHORED]->(:Paper)-[:ABOUT]->(c:Concept)
+  WITH a, papers, c.name AS conceptName, count(c) AS conceptCount
+  ORDER BY conceptCount DESC, conceptName
   WITH a,
        papers,
-       collect(DISTINCT { name: conceptName, count: conceptWeight }) AS rawConcepts,
-       co,
-       count(DISTINCT co) AS sharedPapers
+       collect(CASE WHEN conceptName IS NOT NULL THEN { name: conceptName, count: conceptCount } END) AS concepts
+
+  OPTIONAL MATCH (a)-[:AUTHORED]->(:Paper)<-[:AUTHORED]-(co:Author)
+  WHERE co <> a
+  WITH a, papers, concepts, co, count(co) AS sharedPapers
+  ORDER BY sharedPapers DESC, co.name
 
   RETURN a {.id, .name} AS author,
          papers,
-         [c IN rawConcepts WHERE c.name IS NOT NULL] AS concepts,
-         collect(DISTINCT CASE WHEN co IS NOT NULL THEN { id: co.id, name: co.name, sharedPapersCount: sharedPapers } END) AS coAuthors
+         concepts,
+         collect(CASE WHEN co IS NOT NULL THEN { id: co.id, name: co.name, sharedPapersCount: sharedPapers } END) AS coAuthors
 `;
 
 export const SEARCH_PAPERS_AND_AUTHORS = `
