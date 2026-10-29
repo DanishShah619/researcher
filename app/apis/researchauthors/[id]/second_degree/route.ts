@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 
 export async function GET(
   request: NextRequest,
@@ -54,10 +55,8 @@ export async function GET(
       `[API /apis/researchauthors/${authorId}/second_degree] Error:`,
       error,
     );
-    const message =
-      error instanceof Error ? error.message : "Database connection failed";
     return NextResponse.json(
-      { error: "Failed to retrieve second-degree network.", details: message },
+      { error: "Failed to retrieve second-degree network.", details: publicDbErrorMessage(error) },
       { status: 503 },
     );
   }

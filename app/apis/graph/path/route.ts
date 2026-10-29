@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 import {
   BRIDGE_PATH_BETWEEN_AUTHORS,
   GET_SAMPLE_AUTHORS_FOR_PATH,
@@ -150,12 +151,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("[API /apis/graph/path] Error:", error);
-    const message =
-      error instanceof Error ? error.message : "Database connection failed";
     return NextResponse.json(
       {
         error: "Failed to calculate author bridge path in CognoDB.",
-        details: message,
+        details: publicDbErrorMessage(error),
       },
       { status: 503 },
     );

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 import { GET_AUTHOR_PROFILE, AuthorProfile } from "@/lib/queries";
 
 export async function GET(
@@ -44,12 +45,10 @@ export async function GET(
     return NextResponse.json(data);
   } catch (error: unknown) {
     console.error(`[API /apis/researchauthors/${authorId}] Error:`, error);
-    const message =
-      error instanceof Error ? error.message : "Database connection failed";
     return NextResponse.json(
       {
         error: "Failed to query author profile from CognoDB.",
-        details: message,
+        details: publicDbErrorMessage(error),
       },
       { status: 503 },
     );

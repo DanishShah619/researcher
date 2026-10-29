@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 import { parseBoundedInt, MAX_LIMIT } from "@/lib/params";
 import { SEARCH_PAPERS_AND_AUTHORS } from "@/lib/queries";
 
@@ -36,12 +37,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error(`[API /apis/researchpapers/search] Error:`, error);
-    const message =
-      error instanceof Error ? error.message : "Database connection failed";
     return NextResponse.json(
       {
         error: "Failed to search CognoDB.",
-        details: message,
+        details: publicDbErrorMessage(error),
       },
       { status: 503 },
     );

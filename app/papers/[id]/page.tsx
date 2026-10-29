@@ -9,6 +9,7 @@ import {
   Network,
 } from "lucide-react";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 import { GET_PAPER_WITH_NEIGHBORHOOD, PaperNeighborhood, GraphNode, GraphEdge } from "@/lib/queries";
 import GraphView from "@/components/GraphView";
 import Badge from "@/components/ui/Badge";
@@ -56,7 +57,7 @@ export default async function PaperDetailPage({ params }: PageProps) {
   try {
     data = await getPaperData(paperId);
   } catch (err: unknown) {
-    errorMsg = err instanceof Error ? err.message : "Database connection failed";
+    errorMsg = publicDbErrorMessage(err);
   }
 
   if (errorMsg) {

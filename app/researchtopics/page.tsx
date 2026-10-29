@@ -8,6 +8,7 @@ import {
   Network,
 } from "lucide-react";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 import {
   GET_RESEARCH_TOPICS,
   GET_PAPERS_BY_TOPIC,
@@ -73,7 +74,7 @@ export default async function ResearchTopicsPage({ searchParams }: PageProps) {
   try {
     data = await getTopicsData(selectedTopic);
   } catch (err: unknown) {
-    errorMsg = err instanceof Error ? err.message : "Database connection failed";
+    errorMsg = publicDbErrorMessage(err);
   }
 
   if (errorMsg) {

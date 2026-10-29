@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 import { parseBoundedInt, MAX_LIMIT } from "@/lib/params";
 import { GET_RESEARCH_TOPICS, GET_PAPERS_BY_TOPIC } from "@/lib/queries";
 
@@ -43,12 +44,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data);
   } catch (error: unknown) {
     console.error("[API /apis/graph/researchtopics] Error:", error);
-    const message =
-      error instanceof Error ? error.message : "Database connection failed";
     return NextResponse.json(
       {
         error: "Failed to retrieve topics from CognoDB.",
-        details: message,
+        details: publicDbErrorMessage(error),
       },
       { status: 503 },
     );

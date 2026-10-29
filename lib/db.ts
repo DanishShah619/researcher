@@ -41,6 +41,11 @@ export function getDriver(): Driver {
 
   const driver = neo4j.driver(uri, neo4j.auth.basic(user, password), {
     maxConnectionPoolSize: 20,
+    // Fail a request after 15s waiting for a free connection instead of the driver's
+    // 60s default, so a burst that exhausts the pool sheds load rather than piling up.
+    // Must stay above connectionTimeout: acquiring includes connecting, and an equal
+    // value turns "database unreachable" into a misleading acquisition timeout.
+    connectionAcquisitionTimeout: 15000,
     connectionTimeout: 10000,
     maxTransactionRetryTime: 15000,
     disableLosslessIntegers: false,

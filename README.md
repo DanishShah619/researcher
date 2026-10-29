@@ -106,6 +106,22 @@ COGNODB_USER="cognodb"
 COGNODB_PASSWORD="<your-password>"
 ```
 
+Optional settings (defaults shown):
+```env
+COGNODB_SLOW_QUERY_MS=500        # log DB sessions slower than this
+API_RATE_LIMIT_PER_MINUTE=60     # per-client limit on /apis/* routes
+```
+
+#### Use a read-only database user for the deployed app
+The web app only reads from the graph; only `npm run seed` writes. Keep the admin credentials on your machine for seeding, and give the deployment (e.g. Render environment variables) a user that can only read, so a bug or abuse of the public site can never modify or delete graph data.
+
+If your CognoDB plan supports user management (Neo4j-compatible `CREATE USER` / built-in `reader` role), run this as the admin user, then set the deployment's `COGNODB_USER` / `COGNODB_PASSWORD` to it:
+```cypher
+CREATE USER app_reader SET PASSWORD '<strong-password>' CHANGE NOT REQUIRED;
+GRANT ROLE reader TO app_reader;
+```
+If it doesn't, check the CognoDB console for an equivalent read-only role or API key.
+
 ### 4. Seed the Graph Database
 Run the automated seed script to fetch live papers from the Semantic Scholar API and populate your CognoDB instance:
 ```bash

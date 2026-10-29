@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 import { parseBoundedInt, MAX_LIMIT } from "@/lib/params";
 import { buildCitationChainQuery } from "@/lib/queries";
 
@@ -52,12 +53,10 @@ export async function GET(
       `[API /apis/researchpapers/${paperId}/citations] Error:`,
       error,
     );
-    const message =
-      error instanceof Error ? error.message : "Database connection failed";
     return NextResponse.json(
       {
         error: "Failed to query citation chain traversal from CognoDB.",
-        details: message,
+        details: publicDbErrorMessage(error),
       },
       { status: 503 },
     );

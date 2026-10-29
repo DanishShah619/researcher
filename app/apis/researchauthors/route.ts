@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 import { parseBoundedInt, MAX_LIMIT } from "@/lib/params";
 
 export async function GET(request: NextRequest) {
@@ -30,10 +31,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ authors });
   } catch (error: unknown) {
     console.error("[API /apis/researchauthors] Error:", error);
-    const message =
-      error instanceof Error ? error.message : "Database connection failed";
     return NextResponse.json(
-      { error: "Failed to retrieve authors list.", details: message },
+      { error: "Failed to retrieve authors list.", details: publicDbErrorMessage(error) },
       { status: 503 },
     );
   }

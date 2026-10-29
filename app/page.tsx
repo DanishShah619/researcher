@@ -16,6 +16,7 @@ import StatCard from "@/components/ui/StatCard";
 import Badge from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 import { pathTracerHref } from "@/lib/links";
 import { GET_GRAPH_STATS, GET_RESEARCH_TOPICS, GET_SAMPLE_AUTHORS_FOR_PATH } from "@/lib/queries";
 
@@ -61,12 +62,13 @@ async function getDashboardData() {
       };
     }, "READ", "page:home");
   } catch (err: unknown) {
+    console.error("Failed to load dashboard data:", err);
     return {
       isDbConnected: false,
       stats: null,
       topics: [],
       samplePairs: [],
-      error: err instanceof Error ? err.message : "Database connection failed",
+      error: publicDbErrorMessage(err),
     };
   }
 }

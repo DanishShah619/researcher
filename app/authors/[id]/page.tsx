@@ -9,6 +9,7 @@ import {
   Network,
 } from "lucide-react";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 import { pathTracerHref } from "@/lib/links";
 import { GET_AUTHOR_PROFILE, AuthorProfile, GraphNode, GraphEdge } from "@/lib/queries";
 import GraphView from "@/components/GraphView";
@@ -55,7 +56,7 @@ export default async function AuthorDetailPage({ params }: PageProps) {
   try {
     data = await getAuthorData(authorId);
   } catch (err: unknown) {
-    errorMsg = err instanceof Error ? err.message : "Database connection failed";
+    errorMsg = publicDbErrorMessage(err);
   }
 
   if (errorMsg) {

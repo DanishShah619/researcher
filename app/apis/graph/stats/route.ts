@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withSession, toNative } from "@/lib/db";
+import { publicDbErrorMessage } from "@/lib/errors";
 import { GET_GRAPH_STATS } from "@/lib/queries";
 
 export async function GET() {
@@ -21,13 +22,11 @@ export async function GET() {
     return NextResponse.json({ ok: true, stats });
   } catch (error: unknown) {
     console.error("[API /apis/graph/stats] Error:", error);
-    const message =
-      error instanceof Error ? error.message : "Database connection failed";
     return NextResponse.json(
       {
         ok: false,
         error: "Failed to query database statistics from CognoDB.",
-        details: message,
+        details: publicDbErrorMessage(error),
       },
       { status: 503 },
     );
